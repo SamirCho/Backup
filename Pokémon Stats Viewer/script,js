@@ -1,0 +1,52 @@
+let list, pokemonData
+async function getData() {
+    list = await fetch('https://pokeapi.co/api/v2/pokemon?offset=0&limit=10000')
+    list = await list.json()
+    list = list['results']
+    for (let i = 0; i < list.length; i++) {
+            pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${list[i]['name']}`)
+            pokemonData = await pokemonData.json()
+            let sprites = pokemonData['sprites']['front_default']
+            addPokemon(list[i]['name'], sprites)
+        }
+}
+let pokemonIndex = 0
+function addPokemon(name, img) {
+    let myElement = document.createElement("div")
+    myElement.innerHTML = `<a href='https://pokemon.fandom.com/wiki/${name}' target="_blank">${capitalizeFirstLetter(name)}</a>
+    <img src=${img} alt="Image is unavailable"><div>Type: ${getTypes()}</div><button onclick='getStats(${pokemonIndex})'>View Stats</button>`
+    pokemonIndex++
+    let container = document.getElementById("container")
+    container.appendChild(myElement)
+    myElement.className = "pokemon"
+}
+async function getStats(index) {
+    window.scrollTo(0,0)
+    let pokemonName = list[index]['name']
+    pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`)
+    pokemonData = await pokemonData.json()
+    let stats = pokemonData["stats"]
+    let text = document.getElementById("text")
+    text.innerHTML = `<b>${capitalizeFirstLetter(pokemonName)}'s stats:</b> <br> ${printStats()}`
+    function printStats() {
+        let a = []
+        let b = 0
+        for (let i = 0; i < stats.length; i++) {
+            a[i] = `${capitalizeFirstLetter(stats[i]['stat']['name'])}: ${stats[i]['base_stat']} `
+            b += stats[i]['base_stat']
+        }
+        a = `${a.join("<br>")}<br> Total: ${b}`
+        return a
+    }
+}
+function getTypes() {
+    let a = []
+    for (let i = 0; i < pokemonData['types'].length; i++) {
+        a[i] = pokemonData['types'][i]['type']['name']
+    }
+    return capitalizeFirstLetter(a.join(" and "))
+}
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+getData()
